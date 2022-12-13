@@ -1,0 +1,39 @@
+﻿<Window x:Class="wpf_luz.DeckWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:wpf_luz"
+        mc:Ignorable="d"
+        Title="Deck Window" Height="900" Width="1600">
+    <Grid>
+        <ListView ItemsSource="{Binding MagicDB}" Margin="20,60,600,30" SelectedItem="{Binding selectedSetCard}" SelectionMode="Single" Name="setList" SelectionChanged="setList_SelectionChanged">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn DisplayMemberBinding="{Binding Mana_Cost}" Header="Mana"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding Name}" Header="Name"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding Type_Line}" Header="Type"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding Oracle_Text}" Header="Text"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding Power}" Header="Power"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding Toughness}" Header="Toughness"/>
+                    <GridViewColumn DisplayMemberBinding="{Binding Loyalty}" Header="Loyalty"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <ListView ItemsSource="{Binding Deck}" Margin="1200,60,20,30" SelectedItem="{Binding selectedDeckCard}" SelectionMode="Single" Name="deckList" SelectionChanged="deckList_SelectionChanged">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn DisplayMemberBinding="{Binding Name}" Header="Deck" Width="380"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <Button Content="Add" Command="{Binding AddCard}" Margin="1019,392,0,0" Height="20" VerticalAlignment="Top" HorizontalAlignment="Left" Width="150" IsEnabled="{Binding isSetSelected}" Name="addBtn"/>
+        <Button Content="Remove" Command="{Binding RemoveCard}" Margin="1019,0,0,0" HorizontalAlignment="Left" Width="150" Height="20" VerticalAlignment="Center" IsEnabled="{Binding isDeckSelected}" Name="removeBtn"/>
+        <Button Content="Clear" Command="{Binding ClearDeck}" Margin="1019,472,0,0" HorizontalAlignment="Left" Width="150" Height="20" VerticalAlignment="Top"/>
+        <Button Content="Save Deck" Command="{Binding SaveDeck}" HorizontalAlignment="Left" Margin="1019,764,0,0" VerticalAlignment="Top" Width="150" Click="Bnt_Save"/>
+        <Label Content="{Binding Deck.Name}" Margin="199,0,600,0" VerticalAlignment="Top" Height="60" FontSize="26" VerticalContentAlignment="Center" HorizontalContentAlignment="Left"/>
+        <Label Content="Deck Name: " Margin="20,0,1401,0" VerticalAlignment="Top" Height="60" FontSize="26" VerticalContentAlignment="Center" HorizontalContentAlignment="Left"/>
+        <Label Content="Cards" VerticalAlignment="Top" FontSize="26" HorizontalContentAlignment="Right" VerticalContentAlignment="Center" Height="60" Margin="1200,0,217,0"/>
+        <Label Content="{Binding Deck.Count}" VerticalAlignment="Top" FontSize="26" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Height="60" Margin="1397,0,20,0"/>
+    </Grid>
+</Window>
