@@ -27,7 +27,8 @@ namespace wpf_luz.ViewModels
         public DeckWindowVM(ObservableCollection<Card> db, int deckId)
         {
             MagicDB = db;
-            dBController = new Controller();
+            dBController = new Controller(new PostgresDB(
+                "127.0.0.1", "5432", "postgres", "docker"));
             Initiaze(deckId);
         }
 

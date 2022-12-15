@@ -25,7 +25,8 @@ namespace wpf_luz.ViewModels
 
         public MainWindowVM()
         {
-            dBController = new Controller();
+            dBController = new Controller(new PostgresDB(
+                "127.0.0.1", "5432", "postgres", "docker"));
             Decks = new ObservableCollection<Deck>();
 
             MagicDB = JsonUtil.loadJSONCardDatabase(); // load cards

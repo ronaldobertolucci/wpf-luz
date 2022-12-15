@@ -11,9 +11,9 @@ namespace wpf_luz.Database
     public class Controller
     {
         IDatabase database;
-        public Controller() 
+        public Controller(IDatabase database) 
         {
-            database = new PostgresDB("127.0.0.1", "5432", "postgres", "docker");
+            this.database = database;
         }
 
         public ObservableCollection<Deck> GetAllDecks()

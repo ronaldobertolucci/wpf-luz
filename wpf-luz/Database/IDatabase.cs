@@ -18,12 +18,12 @@ namespace wpf_luz.Database
         void UpdateDeck(Deck obj, string sql);
         void RemoveDeck(Deck obj, string sql);
         void AddCardsToDeck(Deck obj, string sql);
+        void ResetTables();
 
 
         //cards
         //ObservableCollection<Card> GetAllCards();
         //void InsertCard(Card card);
 
-        void ResetTables();
     }
 }
