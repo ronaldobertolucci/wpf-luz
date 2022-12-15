@@ -2,42 +2,62 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using wpf_luz.Models;
+using wpf_luz.Util;
 
 namespace wpf_luz.Database
 {
-    public class PostgresDB : IDBController
+    public class PostgresDB : IDatabase
     {
         private NpgsqlCommand cmd;
         private NpgsqlDataReader reader;
         NpgsqlConnection connection;
-        ConnectionFactory connFactory;
+        private readonly string connectionString;
 
-        public PostgresDB()
+        public PostgresDB(string host, string port, string username, string pass)
         {
-            connFactory = new ConnectionFactory("127.0.0.1", "5432", "postgres", "docker");
+            connectionString = $"Host={host};Port={port};Username={username};Password={pass};";
         }
 
-        public ObservableCollection<Deck> GetAllDecks()
+        public NpgsqlConnection GetConnection()
+        {
+            try
+            {
+                connection = new NpgsqlConnection(connectionString);
+                connection.Open();
+                if (connection.State == System.Data.ConnectionState.Open)
+                {
+                    Trace.WriteLine("Connection opened");
+                }
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+            return connection;
+        }
+        
+        public ObservableCollection<Deck> GetAllDecks(string sql)
         {
             ObservableCollection<Deck> list = null;
-            connection = connFactory.getConnection();
+            connection = GetConnection();
 
             try
             {
                 list = new ObservableCollection<Deck>();
-                cmd = new NpgsqlCommand("SELECT id, name, description FROM decks", connection);
+                cmd = new NpgsqlCommand(sql, connection);
                 reader = cmd.ExecuteReader();
                 while (reader.Read())
                 {
                     Deck deck = new Deck()
                     {
                         Id = reader.GetInt32(0),
-                        Name = safeGetString(reader, 1),
-                        Description = safeGetString(reader, 2)
+                        Name = GetStringSafely(reader, 1),
+                        Description = GetStringSafely(reader, 2)
                     };
                     list.Add(deck);
                 }
@@ -56,15 +76,15 @@ namespace wpf_luz.Database
             return list;
         }
 
-        public Deck GetDeck(int deckId)
+        public Deck GetDeck(int deckId, string sql)
         {
             Deck deck = null;
-            connection = connFactory.getConnection();
+            connection = GetConnection();
 
             try
             {
-                cmd = new NpgsqlCommand("SELECT * FROM decks WHERE id = @i", connection);
-                cmd.Parameters.AddWithValue("i", deckId);
+                cmd = new NpgsqlCommand(sql, connection);
+                cmd.Parameters.AddWithValue("id", deckId);
                 reader = cmd.ExecuteReader();
                 if (reader.HasRows)
                 {
@@ -72,9 +92,9 @@ namespace wpf_luz.Database
                     deck = new Deck()
                     {
                         Id = reader.GetInt32(0),
-                        Name = safeGetString(reader, 1),
-                        Description = safeGetString(reader, 2),
-                        Cards = safeGetString(reader, 3)
+                        Name = GetStringSafely(reader, 1),
+                        Description = GetStringSafely(reader, 2),
+                        Cards = GetStringSafely(reader, 3)
                     };
                 }
                 reader.Dispose();
@@ -92,15 +112,15 @@ namespace wpf_luz.Database
             return deck;
         }
 
-        public void InsertDeck(Deck deck)
+        public void InsertDeck(Deck deck, string sql)
         {
-            connection = connFactory.getConnection();
+            connection = GetConnection();
 
             try
             {
-                cmd = new NpgsqlCommand("INSERT INTO decks (name, description) VALUES(@n, @d)", connection);
-                cmd.Parameters.AddWithValue("n", returnEmptyIfNull(deck, "Name"));
-                cmd.Parameters.AddWithValue("d", returnEmptyIfNull(deck, "Description"));
+                cmd = new NpgsqlCommand(sql, connection);
+                cmd.Parameters.AddWithValue("name", ReturnEmptyIfNull(deck, "Name"));
+                cmd.Parameters.AddWithValue("description", ReturnEmptyIfNull(deck, "Description"));
                 cmd.ExecuteNonQuery();
             }
             catch (Exception)
@@ -115,14 +135,14 @@ namespace wpf_luz.Database
             connection.Close();
         }
 
-        public void RemoveDeck(Deck deck)
+        public void RemoveDeck(Deck deck, string sql)
         {
-            connection = connFactory.getConnection();
+            connection = GetConnection();
 
             try
             {
-                cmd = new NpgsqlCommand("DELETE FROM decks WHERE id = @i;", connection);
-                cmd.Parameters.AddWithValue("i", deck.Id);
+                cmd = new NpgsqlCommand(sql, connection);
+                cmd.Parameters.AddWithValue("id", deck.Id);
                 cmd.ExecuteNonQuery();
             }
             catch (Exception)
@@ -137,19 +157,16 @@ namespace wpf_luz.Database
             connection.Close();
         }
 
-        public void UpdateDeck(Deck deck)
+        public void UpdateDeck(Deck deck, string sql)
         {
-            connection = connFactory.getConnection();
+            connection = GetConnection();
 
             try
             {
-                cmd = new NpgsqlCommand("UPDATE decks " +
-                    "SET name = @n, " +
-                    "description = @d " +
-                    "WHERE id = @i", connection);
-                cmd.Parameters.AddWithValue("n", returnEmptyIfNull(deck, "Name"));
-                cmd.Parameters.AddWithValue("d", returnEmptyIfNull(deck, "Description"));
-                cmd.Parameters.AddWithValue("i", deck.Id);
+                cmd = new NpgsqlCommand(sql, connection);
+                cmd.Parameters.AddWithValue("name", ReturnEmptyIfNull(deck, "Name"));
+                cmd.Parameters.AddWithValue("description", ReturnEmptyIfNull(deck, "Description"));
+                cmd.Parameters.AddWithValue("id", deck.Id);
                 cmd.ExecuteNonQuery();
             }
             catch (Exception)
@@ -164,18 +181,16 @@ namespace wpf_luz.Database
             connection.Close();
         }
 
-        public void AddCardsToDeck(Deck deck)
+        public void AddCardsToDeck(Deck deck, string sql)
         {
             string json = JsonUtil.returnJSON(deck);
-            connection = connFactory.getConnection();
+            connection = GetConnection();
 
             try
             {
-                cmd = new NpgsqlCommand("UPDATE decks " +
-                    "SET cards = @c " +
-                    "WHERE id = @i", connection);
-                cmd.Parameters.AddWithValue("c", json);
-                cmd.Parameters.AddWithValue("i", deck.Id);
+                cmd = new NpgsqlCommand(sql, connection);
+                cmd.Parameters.AddWithValue("cards", json);
+                cmd.Parameters.AddWithValue("id", deck.Id);
                 cmd.ExecuteNonQuery();
             }
             catch (Exception)
@@ -190,12 +205,14 @@ namespace wpf_luz.Database
             connection.Close();
         }
 
-        //public ObservableCollection<Card> GetAllCards()
+
+
+        //public ObservableCollection<Card> LoadData(string sql)
         //{
         //    ObservableCollection<Card> list = new ObservableCollection<Card>();
         //    try
         //    {
-        //        connection = connFactory.getConnection();
+        //        connection = GetConnection();
         //        cmd = new NpgsqlCommand("SELECT * FROM cards", connection);
         //        reader = cmd.ExecuteReader();
         //        while (reader.Read())
@@ -234,7 +251,7 @@ namespace wpf_luz.Database
         //{
         //    try
         //    {
-        //        connection = connFactory.getConnection();
+        //        connection = GetConnection();
         //        cmd = new NpgsqlCommand("INSERT INTO cards (" + 
         //                                "id, " +
         //                                "name, " +
@@ -273,7 +290,7 @@ namespace wpf_luz.Database
 
         public void ResetTables()
         {
-            connection = connFactory.getConnection();
+            connection = GetConnection();
             dropTables();
             createTables();
             connection.Close();
@@ -281,7 +298,7 @@ namespace wpf_luz.Database
 
         private void dropTables()
         {
-            connection = connFactory.getConnection();
+            connection = GetConnection();
 
             try
             {
@@ -304,7 +321,7 @@ namespace wpf_luz.Database
 
         private void createTables()
         {
-            connection = connFactory.getConnection();
+            connection = GetConnection();
 
             try
             {
@@ -346,23 +363,15 @@ namespace wpf_luz.Database
             connection.Close();
         }
 
-        private string returnEmptyIfNull(Deck obj, String PropertyName)
+        private string ReturnEmptyIfNull<T>(T obj, String PropertyName)
         {
-            var prop = typeof(Deck).GetProperty(PropertyName).GetValue(obj, null);
+            var prop = typeof(T).GetProperty(PropertyName).GetValue(obj, null);
             if (prop != null)
                 return (string)prop;
             return string.Empty;
         }
 
-        //private string returnEmptyIfNull(Card obj, String PropertyName)
-        //{
-        //    var prop = typeof(Card).GetProperty(PropertyName).GetValue(obj, null);
-        //    if (prop != null)
-        //        return (string)prop;
-        //    return string.Empty;
-        //}
-
-        private string safeGetString(NpgsqlDataReader reader, int colIndex)
+        private string GetStringSafely(NpgsqlDataReader reader, int colIndex)
         {
             if (!reader.IsDBNull(colIndex))
                 return reader.GetString(colIndex);

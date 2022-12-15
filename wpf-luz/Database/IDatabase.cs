@@ -9,15 +9,15 @@ using wpf_luz.Models;
 
 namespace wpf_luz.Database
 {
-    public interface IDBController
+    public interface IDatabase
     {
         // decks
-        ObservableCollection<Deck> GetAllDecks();
-        Deck GetDeck(int deckId);
-        void InsertDeck(Deck deck);
-        void UpdateDeck(Deck deck);
-        void RemoveDeck(Deck deck);
-        void AddCardsToDeck(Deck deck);
+        ObservableCollection<Deck> GetAllDecks(string sql);
+        Deck GetDeck(int id, string sql);
+        void InsertDeck(Deck obj, string sql);
+        void UpdateDeck(Deck obj, string sql);
+        void RemoveDeck(Deck obj, string sql);
+        void AddCardsToDeck(Deck obj, string sql);
 
 
         //cards

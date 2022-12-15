@@ -21,11 +21,11 @@ namespace wpf_luz.ViewModels
         public ICommand AddCards { get; private set; }
         public ObservableCollection<Deck> Decks { get; set; }
         public Deck selectedDeck { get; set; }
-        public IDBController dBController { get; set; }
+        public Controller dBController { get; set; }
 
         public MainWindowVM()
         {
-            dBController = new PostgresDB();
+            dBController = new Controller();
             Decks = new ObservableCollection<Deck>();
 
             MagicDB = JsonUtil.loadJSONCardDatabase(); // load cards

@@ -22,12 +22,12 @@ namespace wpf_luz.ViewModels
         public ICommand SaveDeck { get; private set; }
         public Card selectedSetCard { get; set; }
         public Card selectedDeckCard { get; set; }
-        public IDBController dBController { get; set; }
+        public Controller dBController { get; set; }
 
         public DeckWindowVM(ObservableCollection<Card> db, int deckId)
         {
             MagicDB = db;
-            dBController = new PostgresDB();
+            dBController = new Controller();
             Initiaze(deckId);
         }
 

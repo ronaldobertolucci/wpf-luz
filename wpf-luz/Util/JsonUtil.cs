@@ -8,7 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using wpf_luz.Models;
 
-namespace wpf_luz.Database
+namespace wpf_luz.Util
 {
     public class JsonUtil
     {
