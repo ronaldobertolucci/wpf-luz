@@ -32,6 +32,10 @@ namespace wpf_luz.Database
         {
             string sql = "INSERT INTO decks (name, description) " +
                 "VALUES(@name, @description)";
+
+            if (deck.Name == null || deck.Name == string.Empty)
+                throw new ArgumentNullException("name");
+
             database.InsertDeck(deck, sql);
         }
 
