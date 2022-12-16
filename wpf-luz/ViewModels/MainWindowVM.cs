@@ -28,7 +28,7 @@ namespace wpf_luz.ViewModels
             dBController = new Controller(new SqliteDB());
             Decks = new ObservableCollection<Deck>();
 
-            MagicDB = JsonUtil.loadJSONCardDatabase(); // load cards
+            MagicDB = ScryfallAPI.loadAllCards(); // load cards
             LoadDecks();
 
             InicializeCommand();

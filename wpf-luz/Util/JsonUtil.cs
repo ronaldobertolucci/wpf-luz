@@ -31,12 +31,11 @@ namespace wpf_luz.Util
             return json;
         }
 
-        public static Deck loadCards(string cards)
+        public static T loadCards<T>(string cards)
         {
-            string json = cards;
-            Deck collection = new Deck();
-            collection = JsonConvert.DeserializeObject<Deck>(json);
-            return collection;
+            T collection;
+            collection = JsonConvert.DeserializeObject<T>(cards);
+            return (T)Convert.ChangeType(collection, typeof(T));
         }
     }
 }

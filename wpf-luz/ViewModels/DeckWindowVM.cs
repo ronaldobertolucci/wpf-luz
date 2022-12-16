@@ -67,7 +67,7 @@ namespace wpf_luz.ViewModels
 
         public void fillDeck()
         {
-            ObservableCollection<Card> cards = JsonUtil.loadCards(Deck.Cards);
+            ObservableCollection<Card> cards = JsonUtil.loadCards<ObservableCollection<Card>>(Deck.Cards);
             if (cards != null)
             {
                 for (int i = 0; i < cards.Count; i++)
