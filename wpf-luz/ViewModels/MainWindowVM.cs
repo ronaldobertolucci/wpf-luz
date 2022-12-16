@@ -25,8 +25,7 @@ namespace wpf_luz.ViewModels
 
         public MainWindowVM()
         {
-            dBController = new Controller(new PostgresDB(
-                "127.0.0.1", "5432", "postgres", "docker"));
+            dBController = new Controller(new SqliteDB());
             Decks = new ObservableCollection<Deck>();
 
             MagicDB = JsonUtil.loadJSONCardDatabase(); // load cards
@@ -46,9 +45,9 @@ namespace wpf_luz.ViewModels
                     if (createDeckDialog.DialogResult == true)
                         dBController.InsertDeck(deck);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    MessageBox.Show("Insert Deck Error");
+                    MessageBox.Show(e.Message + "\nInsert Deck Error");
                 }
 
                 LoadDecks();
@@ -74,9 +73,9 @@ namespace wpf_luz.ViewModels
                     if (updateDeckDialog.DialogResult == true)
                         dBController.UpdateDeck(selectedDeck);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    MessageBox.Show("Update Deck Error");
+                    MessageBox.Show(e.Message + "\nUpdate Deck Error");
                 }
 
                 LoadDecks();
@@ -85,7 +84,7 @@ namespace wpf_luz.ViewModels
             {
                 try
                 {
-                    DeckWindow deckWindow = new DeckWindow(MagicDB, selectedDeck.Id);
+                    DeckWindow deckWindow = new DeckWindow(MagicDB, selectedDeck);
                 }
                 catch (Exception)
                 {

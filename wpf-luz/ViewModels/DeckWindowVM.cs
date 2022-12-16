@@ -24,12 +24,14 @@ namespace wpf_luz.ViewModels
         public Card selectedDeckCard { get; set; }
         public Controller dBController { get; set; }
 
-        public DeckWindowVM(ObservableCollection<Card> db, int deckId)
+        public DeckWindowVM(ObservableCollection<Card> db, Deck deck)
         {
             MagicDB = db;
-            dBController = new Controller(new PostgresDB(
-                "127.0.0.1", "5432", "postgres", "docker"));
-            Initiaze(deckId);
+            dBController = new Controller(new SqliteDB());
+
+            Deck = deck;
+            fillDeck();
+            InicializeCommand();
         }
 
         public void InicializeCommand()
@@ -53,6 +55,7 @@ namespace wpf_luz.ViewModels
             {
                 try
                 {
+
                     dBController.AddCardsToDeck(Deck);
                 }
                 catch (Exception)
@@ -60,21 +63,6 @@ namespace wpf_luz.ViewModels
                     MessageBox.Show("Saving Deck Error");
                 }
             });
-        }
-
-
-        public void Initiaze(int deckId)
-        {
-            try
-            {
-                Deck = dBController.GetDeck(deckId); // 'cards' null problem
-                fillDeck();
-                InicializeCommand();
-            }
-            catch (Exception)
-            {
-                throw;
-            }
         }
 
         public void fillDeck()

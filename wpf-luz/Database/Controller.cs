@@ -18,7 +18,7 @@ namespace wpf_luz.Database
 
         public ObservableCollection<Deck> GetAllDecks()
         {
-            string sql = "SELECT id, name, description FROM decks";
+            string sql = "SELECT * FROM decks";
             return database.GetAllDecks(sql);
         }
 
@@ -45,6 +45,10 @@ namespace wpf_luz.Database
                     "SET name = @name, " +
                     "description = @description " +
                     "WHERE id = @id";
+
+            if (deck.Name == null || deck.Name == string.Empty)
+                throw new ArgumentNullException("name");
+
             database.UpdateDeck(deck, sql);
         }
 

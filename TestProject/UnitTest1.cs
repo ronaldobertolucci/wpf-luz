@@ -13,7 +13,7 @@ namespace TestProject
         {
             using (var mock = AutoMock.GetLoose())
             {
-                string sql = "SELECT id, name, description FROM decks";
+                string sql = "SELECT * FROM decks";
                 mock.Mock<IDatabase>()
                     .Setup(x => x.GetAllDecks(sql))
                     .Returns(GetSampleDecks());
@@ -35,12 +35,12 @@ namespace TestProject
                 var deck = GetSampleDecks()[0];
                 string sql = "SELECT * FROM decks WHERE id = @id";
                 mock.Mock<IDatabase>()
-                    .Setup(x => x.GetDeck(1, sql))
+                    .Setup(x => x.GetDeck(deck.Id, sql))
                     .Returns(deck);
 
                 var cls = mock.Create<Controller>();
                 var expected = GetSampleDecks()[0];
-                var actual = cls.GetDeck(1);
+                var actual = cls.GetDeck(deck.Id);
 
                 Assert.True(actual != null);
                 Assert.Equal(expected.Name, actual.Name);

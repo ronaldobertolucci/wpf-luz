@@ -1,56 +1,71 @@
-﻿using Npgsql;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Data;
+using System.Data.SQLite;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
+using System.Windows.Documents;
 using wpf_luz.Models;
 using wpf_luz.Util;
 
 namespace wpf_luz.Database
 {
-    public class PostgresDB : IDatabase
+    public class SqliteDB : IDatabase
     {
-        private NpgsqlCommand cmd;
-        private NpgsqlDataReader reader;
-        NpgsqlConnection connection;
-        private readonly string connectionString;
-        private string host = "127.0.0.1";
-        private string port = "5432";
-        private string username = "postgres";
-        private string pass = "docker";
+        private SQLiteConnection sqliteConnection;
+        private SQLiteDataReader reader;
+        private readonly string connString = "Data Source=/magic/db.sqlite;";
+        private readonly string path = "/magic/db.sqlite";
 
-        public PostgresDB()
+        public SqliteDB() { }
+
+        private SQLiteConnection GetConnection()
         {
-            connectionString = $"Host={host};Port={port};Username={username};Password={pass};";
+            if (!File.Exists(path))
+            {
+                CreateDB();
+                ResetTables();
+                return GetConnection();
+            }
+            else
+            {
+                sqliteConnection = new SQLiteConnection(connString);
+                sqliteConnection.Open();
+                return sqliteConnection;
+            }
         }
 
-        public NpgsqlConnection GetConnection()
+        public void CreateDB()
         {
             try
             {
-                connection = new NpgsqlConnection(connectionString);
-                connection.Open();
+                string dir = @"C:\magic";
+                // If directory does not exist, create it
+                if (!Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+                SQLiteConnection.CreateFile(path);
             }
-            catch (Exception)
+            catch
             {
                 throw;
             }
-            return connection;
         }
-        
+
         public ObservableCollection<Deck> GetAllDecks(string sql)
         {
-
             try
             {
-                using (connection = GetConnection())
+                using (var cmd = GetConnection().CreateCommand())
                 {
                     ObservableCollection<Deck> list = new ObservableCollection<Deck>();
-                    cmd = new NpgsqlCommand(sql, connection);
+                    cmd.CommandText = sql;
                     reader = cmd.ExecuteReader();
                     while (reader.Read())
                     {
@@ -66,7 +81,7 @@ namespace wpf_luz.Database
                     return list;
                 }
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw;
             }
@@ -74,12 +89,13 @@ namespace wpf_luz.Database
 
         public Deck GetDeck(int deckId, string sql)
         {
+
             try
             {
-                using (connection = GetConnection())
+                using (var cmd = GetConnection().CreateCommand())
                 {
                     Deck deck = new Deck();
-                    cmd = new NpgsqlCommand(sql, connection);
+                    cmd.CommandText = sql;
                     cmd.Parameters.AddWithValue("id", deckId);
                     reader = cmd.ExecuteReader();
                     if (reader.HasRows)
@@ -93,7 +109,7 @@ namespace wpf_luz.Database
                             Cards = GetStringSafely(reader, 3)
                         };
                     }
-                    return deck;    
+                    return deck;
                 }
             }
             catch (Exception)
@@ -106,9 +122,9 @@ namespace wpf_luz.Database
         {
             try
             {
-                using (connection = GetConnection())
+                using (var cmd = GetConnection().CreateCommand())
                 {
-                    cmd = new NpgsqlCommand(sql, connection);
+                    cmd.CommandText = sql;
                     cmd.Parameters.AddWithValue("name", ReturnEmptyIfNull(deck, "Name"));
                     cmd.Parameters.AddWithValue("description", ReturnEmptyIfNull(deck, "Description"));
                     cmd.ExecuteNonQuery();
@@ -124,9 +140,9 @@ namespace wpf_luz.Database
         {
             try
             {
-                using (connection = GetConnection())
+                using (var cmd = GetConnection().CreateCommand())
                 {
-                    cmd = new NpgsqlCommand(sql, connection);
+                    cmd.CommandText = sql;
                     cmd.Parameters.AddWithValue("id", deck.Id);
                     cmd.ExecuteNonQuery();
                 }
@@ -141,9 +157,9 @@ namespace wpf_luz.Database
         {
             try
             {
-                using (connection = GetConnection())
+                using (var cmd = GetConnection().CreateCommand())
                 {
-                    cmd = new NpgsqlCommand(sql, connection);
+                    cmd.CommandText = sql;
                     cmd.Parameters.AddWithValue("name", ReturnEmptyIfNull(deck, "Name"));
                     cmd.Parameters.AddWithValue("description", ReturnEmptyIfNull(deck, "Description"));
                     cmd.Parameters.AddWithValue("id", deck.Id);
@@ -155,30 +171,30 @@ namespace wpf_luz.Database
                 throw;
             }
         }
-
-        public void AddCardsToDeck(Deck deck, string sql)
+        
+        public void AddCardsToDeck(Deck obj, string sql)
         {
-            string json = JsonUtil.returnJSON(deck);
-            connection = GetConnection();
-
+            string json = JsonUtil.returnJSON(obj);
             try
             {
-                using (connection = GetConnection())
+                using (var cmd = GetConnection().CreateCommand())
                 {
-                    cmd = new NpgsqlCommand(sql, connection);
+                    cmd.CommandText = sql;
                     cmd.Parameters.AddWithValue("cards", json);
-                    cmd.Parameters.AddWithValue("id", deck.Id);
+                    cmd.Parameters.AddWithValue("id", obj.Id);
                     cmd.ExecuteNonQuery();
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
+                Trace.WriteLine(e.Message);
                 throw;
             }
         }
+
         public void ResetTables()
         {
-            using (connection = GetConnection())
+            using (var cmd = GetConnection().CreateCommand())
             {
                 dropTables();
                 createTables();
@@ -189,11 +205,10 @@ namespace wpf_luz.Database
         {
             try
             {
-                using (connection = GetConnection())
+                using (var cmd = GetConnection().CreateCommand())
                 {
-                    cmd = new NpgsqlCommand(@"  DROP TABLE IF EXISTS decks;
-                                                DROP TABLE IF EXISTS cards;",
-                                                connection);
+                    cmd.CommandText = @"  DROP TABLE IF EXISTS decks;
+                                          DROP TABLE IF EXISTS cards;";
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -207,17 +222,16 @@ namespace wpf_luz.Database
         {
             try
             {
-                using (connection = GetConnection())
+                using (var cmd = GetConnection().CreateCommand())
                 {
-                    cmd = new NpgsqlCommand(@"
-                            CREATE TABLE IF NOT EXISTS decks
-                            (
-                                id integer NOT NULL GENERATED ALWAYS AS IDENTITY ( INCREMENT 1 START 1 MINVALUE 1 MAXVALUE 2147483647 CACHE 1 ),
-                                name character varying(50) COLLATE pg_catalog.""default"",
-                                description character varying(255) COLLATE pg_catalog.""default"",
-                                cards text,
-                                CONSTRAINT decks_pkey PRIMARY KEY (id)
-                            );", connection);
+                    cmd.CommandText = @"
+                        CREATE TABLE IF NOT EXISTS decks
+                        (
+                            id INTEGER PRIMARY KEY AUTOINCREMENT,
+                            name TEXT,
+                            description TEXT,
+                            cards TEXT 
+                        );";
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -235,11 +249,15 @@ namespace wpf_luz.Database
             return string.Empty;
         }
 
-        private string GetStringSafely(NpgsqlDataReader reader, int colIndex)
+        private string GetStringSafely(SQLiteDataReader reader, int colIndex)
         {
             if (!reader.IsDBNull(colIndex))
                 return reader.GetString(colIndex);
             return string.Empty;
         }
+
     }
 }
+
+
+     

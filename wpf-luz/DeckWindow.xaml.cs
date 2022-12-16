@@ -22,10 +22,10 @@ namespace wpf_luz
     /// </summary>
     public partial class DeckWindow : Window
     {
-        public DeckWindow(ObservableCollection<Card> db, int deckId)
+        public DeckWindow(ObservableCollection<Card> db, Deck deck)
         {
             InitializeComponent();
-            DataContext = new DeckWindowVM(db, deckId);
+            DataContext = new DeckWindowVM(db, deck);
             ShowDialog();
         }
 

@@ -13,7 +13,7 @@ namespace wpf_luz.Database
     {
         // decks
         ObservableCollection<Deck> GetAllDecks(string sql);
-        Deck GetDeck(int id, string sql);
+        Deck GetDeck(int deckId, string sql);
         void InsertDeck(Deck obj, string sql);
         void UpdateDeck(Deck obj, string sql);
         void RemoveDeck(Deck obj, string sql);
